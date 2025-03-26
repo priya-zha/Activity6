@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <h1><I><u>Scatter Plot for the Iris DataSet</h1>
+  <head>
+    <title>Activity 6 Scatter Plot</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      h1{
+        text-align: center;
+        color: red;
+      }
+      .tick text {
+        font-size: 20px;
+      }
+    </style>
+    <script src="https://unpkg.com/d3@6.7.0/dist/d3.min.js"></script>
+  </head>
+  <body>
+    <script>
+const {csv, select, scaleLinear, extent, axisLeft, axisBottom, } = d3;
+const csvUrl = 'https://gist.githubusercontent.com/priya-zha/3dc3aa9a47007d7611c0e32d6a93ee3d/raw/32dc00c22df5f1d665c6b63181089d5eade9765f/iris.csv'
+      const parseRow = (d) => {
+        d.SepalLengthCm = +d.sepal_length;
+        d.SepalWidthCm = +d.sepal_width;
+        d.PetalLengthCm = +d.petal_length;
+        d.PetalWidthCm = +d.petal_width;
+        return d;
+      };  //LOAD THE DATA
+      const xValue = (d) => d.petal_length;
+      
+      const yValue = (d) => d.petal_width;
+      
+      const rxValue = (d) => d.sepal_length;
+      const ryValue = (d) => d.sepal_width;
+      
+      const speciesValue = (d) => d.species;
+      
+      const margin = {
+        top: 30,
+        right: 50,
+        bottom: 190,
+        left: 90,
+      };
+      const radius = 5;
+
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const svg = select('body')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+      
+      
+      const main = async () => {
+        const data = await csv(csvUrl, parseRow);
+        
+        const x = scaleLinear()
+          .domain(extent(data, xValue))
+          .range([margin.left, width - margin.right]);
+        
+        const y = scaleLinear()
+          .domain(extent(data, yValue))
+          .range([height - margin.bottom, margin.top]);
+        
+        
+        const marker = (d) => {
+        	switch(d){
+            case 'setosa':
+              return 'skyblue';
+            case 'versicolor':
+              return 'lightgreen';
+            default:
+              return 'orange';
+          }
+        }
+        
+        const marks = data.map((d) => ({
+          x: x(xValue(d)),
+          y: y(yValue(d)),
+          Species: speciesValue(d),
+          color: marker(speciesValue(d)),
+        	rx: rxValue(d),
+          ry: ryValue(d),             
+        }));
+        
+        svg
+          .selectAll('circle')
+          .data(marks)
+          .join('circle')
+          .attr('cx', (d) => d.x)
+          .attr('cy', (d) => d.y)
+        	.attr('fill', (d) => d.color)
+        	.attr('rx', (d) => (d.rx))
+        	.attr('ry', (d) => (d.ry))
+          .attr('r', radius);
+        svg
+          .append('g')
+          .attr('transform', `translate(${margin.left},0)`)
+          .call(axisLeft(y));
+        
+        svg.append('text')
+          .attr('class', 'axis-label')
+          .attr('x', -innerHeight / 2)
+          .attr('y', 30)
+          .attr('fill', 'green')
+          .style("font", "20px times")
+          .style('text-anchor', 'middle')
+          .attr('transform', `rotate(-90)`)
+          .text('Petal_Length');
+        
+        svg
+          .append('g')
+          .attr(
+            'transform',
+            `translate(0,${height - margin.bottom})`
+          )
+          .call(axisBottom(x));
+        
+          svg.append('text')
+  .attr('class', 'axis-label')
+  .attr('x', width / 2)  // Use 'width' instead of 'innerWidth'
+  .attr('y', height - margin.bottom + 40)  // Adjust position to be below x-axis
+  .attr('fill', 'green')
+  .style("font", "20px times")
+  .style('text-anchor', 'middle')
+  .text('Sepal Length');
+        
+      };
+      main();
+    </script>
+  </body>
+</html>
