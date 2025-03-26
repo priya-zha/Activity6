@@ -3,6 +3,12 @@
 # dependencies
 /my-app-Q1-1/node_modules
 /my-app-Q1-2/node_modules
+/Task 3-Questions/node_modules
+/Task 3-Questions/dist
+/Task 3-Questions/.parcel-cache
+/Task3.2/node_modules
+/Task3.2/dist
+/Task3.2/.parcel-cache
 /.pnp
 .pnp.js
 
