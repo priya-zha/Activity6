@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IMDb Movie ratings</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.js"></script>
+  </head>
+  <body>
+    <svg width="960" height="500"></svg>
+    
+    <script>(function (d3) {
+  'use strict';
+
+  const titleText =
+    'Rating according to genres';
+  const xAxisLabelText =
+    'Percentage';
+	
+  const f = d3.format(".2f");
+  const svg = d3.select('svg');
+
+  const width = +svg.attr('width');
+  const height = +svg.attr('height');
+
+  const render = (data) => {
+    
+    const margin = {
+      top: 50,
+      right: 200,
+      bottom: 77,
+      left: 120,
+    };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const percentage = data.columns.slice(1);
+
+    const genre = d3.map(data, (d) => d.genre);
+    
+
+    const stackedData = d3.stack().keys(percentage)(data);
+    
+    const colorScale = ["#7fc97f","#fdc086","#386cb0","#f0027f","#666666"];
+    
+    const color = d3.scaleOrdinal()
+      .domain(percentage)
+      .range(colorScale);
+
+
+    const xScale = d3.scaleLinear()
+      .domain([0, 1])
+      .range([0, innerWidth]);
+
+    const yScale = d3.scaleBand()
+      .domain(genre)
+      .range([0, innerHeight])
+      .padding(0.1);
+
+    const g = svg
+      .append('g')
+      .attr(
+        'transform',
+        `translate(${margin.left},${margin.top})`
+      );
+
+    const xAxis = d3.axisBottom(xScale).tickSize(-innerHeight);
+
+    g.append('g')
+      .call(d3.axisLeft(yScale))
+      .selectAll('.domain, .tick line')
+      .remove();
+
+    const xAxisG = g
+      .append('g')
+      .call(xAxis)
+      .attr('transform', `translate(0,${innerHeight})`);
+
+    xAxisG.select('.domain').remove();
+
+    xAxisG
+      .append('text')
+      .attr('class', 'axis-label')
+      .attr('y', 65)
+      .attr('x', innerWidth / 2)
+      .attr('fill', 'black')
+      .text(xAxisLabelText);
+
+    // add the tool tip to the body
+    const tooltip = d3.select('body').append('div').attr('class', 'toolTip');
+    
+    tooltip
+      .append('rect')
+      .attr('width', 60)
+      .attr('height', 20)
+      .attr('fill', 'none')
+      .style('opacity', 0.5);
+
+    tooltip
+      .append('text')
+      .attr('x', 30)
+      .attr('dy', '1.2em')
+      .style('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .attr('font-weight', 'bold');
+    
+    g.append('g')
+      .selectAll('g')
+      // Enter in the stack data = loop key per key = group per group
+      .data(stackedData)
+      .enter()
+      .append('g')
+      .attr('fill', (d) => color(d.key))
+      .selectAll('rect')
+      // enter a second time = loop subgroup per subgroup to add all rectangles
+      .data((d) => d)
+      .enter()
+      .append('rect')
+      .attr('y', (d) => yScale(d.data.genre))
+      .attr('x', (d) => xScale(d[0]))
+      .attr('width', (d) => xScale(d[1]) - xScale(d[0]))
+      .attr('height', yScale.bandwidth())
+      .on('mouseover', function (event, d) {
+        d3.select(this).attr('opacity', 0.5);
+      })
+      .on('mousemove', function (event, d) {
+      	
+        const movieType = d3.select(this.parentNode).datum()
+          .key;
+        const percentCount = d.data[movieType];
+        tooltip
+          .style('left', event.pageX - 50 + 'px')
+          .style('top', event.pageY - 70 + 'px')
+          .style('display', 'inline-block')
+          .html('Rating ' + movieType + ' percentage: ' + f(percentCount*100) + "%");
+      })
+      .on('mouseout', function (d) {
+        d3.select(this).attr('opacity', 1);
+        tooltip.style('display', 'none');
+      });
+
+    g.append('text')
+      .attr('class', 'title')
+      .attr('y', -10)
+      .text(titleText);
+
+    g.append('text')
+      .attr('text-anchor', 'right')
+      .attr('x', 670)
+      .attr('y', 100)
+      .style('font-size', '20px')
+      .style('font-weight', 'bold')
+      .text('Rating');
+
+    g.selectAll('legend')
+      .data(percentage)
+      .enter()
+      .append('rect')
+      .attr('x', 660)
+      .attr('y', function (d, i) {
+        return 110 + i * 26;
+      })
+      .attr('width', 15)
+      .attr('height', 15)
+      .style('fill', function (d) {
+        return color(d);
+      });
+
+    g.selectAll('legendLabels')
+      .data(percentage)
+      .enter()
+      .append('text')
+      .attr('x', 700)
+      .attr('y', function (d, i) {
+        return 118 + i * 26;
+      })
+      .style('fill', function (d) {
+        return color(d);
+      })
+      .text(function (d) {
+        return d;
+      })
+      .attr('text-anchor', 'left')
+      .style('alignment-baseline', 'middle')
+      .style('font-size', '18px')
+      .style('font-weight', 'bold');
+  };
+
+  d3.csv('data.csv').then((data) => {
+    render(data);
+  });
+
+}(d3));
+    </script>
+  </body>
+</html>

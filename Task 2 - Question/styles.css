@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@200;300&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Sofia');
+
+body {
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  font-family: 'Yanone Kaffeesatz', sans-serif;
+  margin: 0px;
+  overflow: hidden;
+  font-weight: bold;
+}
+
+.tick text {
+  font-size: 2em;
+  fill: #635F5D;
+  font-family: 'Yanone Kaffeesatz', sans-serif;
+  font-weight: bold;
+}
+
+.tick line {
+  stroke: #f5e5e4;
+}
+.axis-label {
+  font-size: 2.1em;
+  fill: #635F5D;
+  font-family: 'Yanone Kaffeesatz', sans-serif;
+}
+
+.toolTip {
+  position: absolute;
+  display: none;
+  min-width: 80px;
+  height: auto;
+  background: none repeat scroll 0 0 #ffffff;
+  border: 1px solid #6F257F;
+  padding: 14px;
+  text-align: center;
+}
+
+text {
+  font-size: 1.9em;
+}
+.xClass {
+  font-size: 1.8em;
+}
