@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDP vs Population Bubble Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 10px;
+      background-color: black;
+      color: white;
+      border-radius: 5px;
+      pointer-events: none;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="bubble_chart"></div>
+
+  <script>
+    const bc_margin = { top: 50, right: 400, bottom: 45, left: 75 },
+      bc_width = 945 - bc_margin.left - bc_margin.right,
+      bc_height = 472 - bc_margin.top - bc_margin.bottom;
+
+    const bc_svg = d3
+      .select("#bubble_chart")
+      .append("svg")
+      .attr("width", bc_width + bc_margin.left + bc_margin.right)
+      .attr("height", bc_height + bc_margin.top + bc_margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${bc_margin.left},${bc_margin.top})`);
+
+    d3.csv("data.csv").then((data) => {
+      data.forEach((d) => {
+        d.GDP = +d.GDP;
+        d.Population = +d.Population;
+        d.CO2 = +d.CO2;
+      });
+
+      bc_svg
+        .append("text")
+        .attr("x", bc_width / 2)
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .style("font-size", "22px")
+        .text("GDP vs Population with CO2 Emissions");
+
+      const x = d3.scaleLinear().domain([d3.min(data, d => d.GDP), d3.max(data, d => d.GDP)]).range([0, bc_width]);
+      bc_svg
+        .append("g")
+        .attr("transform", `translate(0, ${bc_height})`)
+        .call(d3.axisBottom(x));
+
+      bc_svg
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", bc_width / 2)
+        .attr("y", bc_height + 40)
+        .text("GDP (in Trillions)");
+
+      const y = d3.scaleLinear().domain([d3.min(data, d => d.Population), d3.max(data, d => d.Population)]).range([bc_height, 0]);
+      bc_svg.append("g").call(d3.axisLeft(y));
+
+      bc_svg
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", -bc_height / 2)
+        .attr("y", -50)
+        .text("Population (in Millions)")
+        .attr("transform", "rotate(-90)");
+
+    //  const z = d3.scaleLinear().domain([0, d3.max(data, (d) => d.CO2)]).range([1, 40]);
+      const minCO2 = d3.min(data, (d) => d.CO2);
+      const maxCO2 = d3.max(data, (d) => d.CO2);
+      const z = d3.scaleSqrt().domain([minCO2, maxCO2]).range([5, 40]); // Using sqrt scale for better visibility
+
+
+      const countries = Array.from(data, (d) => d.Country);
+      const countryColors = countries.map((el, i, arr) => d3.interpolateTurbo(i / arr.length));
+      const myColor = d3.scaleOrdinal().domain(countries).range(countryColors);
+
+      const tooltip = d3
+        .select("#bubble_chart")
+        .append("div")
+        .attr("class", "tooltip");
+
+      const showTooltip = (event, d) => {
+        tooltip.transition().duration(200);
+        tooltip
+          .style("opacity", 1)
+          .html("Country: " + d.Country)
+          .style("left", event.x + 25 + "px")
+          .style("top", event.y + 25 + "px");
+      };
+
+      const moveTooltip = (event, d) => {
+        tooltip.style("left", event.x + 25 + "px").style("top", event.y + 25 + "px");
+      };
+
+      const hideTooltip = () => {
+        tooltip.transition().duration(200).style("opacity", 0);
+      };
+
+      bc_svg
+        .selectAll("circle")
+        .data(data)
+        .join("circle")
+        .attr("cx", (d) => x(d.GDP))
+        .attr("cy", (d) => y(d.Population))
+        .attr("r", (d) => z(d.CO2))
+        .style("fill", (d) => myColor(d.Country))
+        .attr("stroke", "black")
+        .on("mouseover", showTooltip)
+        .on("mousemove", moveTooltip)
+        .on("mouseleave", hideTooltip);
+
+      const valuesToShow = [20, 40];
+      const xCircle = 745;
+      const xLabel = 810;
+      bc_svg
+        .selectAll("legend")
+        .data(valuesToShow)
+        .join("circle")
+        .attr("cx", xCircle)
+        .attr("cy", (d) => bc_height - 100 - z(d))
+        .attr("r", (d) => z(d))
+        .style("fill", "none")
+        .attr("stroke", "black");
+
+      bc_svg
+        .selectAll("legend")
+        .data(valuesToShow)
+        .join("text")
+        .attr("x", xLabel)
+        .attr("y", (d) => bc_height - 100 - z(d))
+        .text((d) => d)
+        .style("font-size", "14px")
+        .attr("alignment-baseline", "middle");
+
+      bc_svg
+        .append("text")
+        .attr("x", xCircle)
+        .attr("y", bc_height - 100 + 30)
+        .text("CO2 Emissions (Bubble Size)")
+        .attr("text-anchor", "middle");
+
+      const size = 5;
+      bc_svg
+        .selectAll("myrect")
+        .data(countries)
+        .join("circle")
+        .attr("cx", 550)
+        .attr("cy", (d, i) => 6 + i * (size + 7))
+        .attr("r", 3)
+        .style("fill", (d) => myColor(d));
+
+      bc_svg
+        .selectAll("mylabels")
+        .data(countries)
+        .enter()
+        .append("text")
+        .attr("x", 550 + size * 2)
+        .attr("y", (d, i) => 10 + i * (size + 7))
+        .style("fill", (d) => myColor(d))
+        .text((d) => d)
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+        .style("font-size", "13px");
+    });
+  </script>
+</body>
+</html>

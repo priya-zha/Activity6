@@ -1,0 +1,18 @@
+html, body {
+    margin: 0;
+    padding: 0;
+  }
+  text {
+    font-family: sans-serif;
+  }
+  
+  .bubbles {
+          opacity: 0.7;
+        }
+        .bubbles:hover {
+          opacity: 1;
+          stroke-width: 2px;
+        }
+        .tooltip {
+          position: absolute;
+        }
